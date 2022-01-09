@@ -1,0 +1,16 @@
+#+title: tsh-login
+#+author: Rune Juhl Jacobsen
+
+Prompt-less login to Teleport using ~expect~ and ~pass~.
+* Usage
+Put in your ~PATH~, e.g. by symlinking the script to ~/usr/local/bin~.
+
+Configure the path to the Teleport password by writing it into
+~\~/.config/tsh-login/password_path~, e.g.
+
+#+begin_src conf
+job/www/teleport.example.org
+#+end_src
+
+Running ~tsh-login~ will now read your password and OTP using ~pass~, passing
+the values to ~tsh login~ to authenticate with Teleport.

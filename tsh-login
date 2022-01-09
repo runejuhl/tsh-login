@@ -1,0 +1,34 @@
+#!/usr/bin/expect -f
+
+set password_path_config "~/.config/tsh-login/password_path"
+if {[catch {set fp [open $password_path_config]} errmsg]} {
+    puts "$errorInfo"
+    exit 66
+}
+set password_path [string trim [read $fp]]
+
+spawn tsh login
+expect {
+    "Enter password for*" {
+        puts "Please decrypt password."
+        set password [string trim [exec pass show $password_path | head -n1]]
+        send "$password\r"
+
+        expect "Enter an OTP code from a device:" {
+            puts "Please decrypt OTP."
+            set otp [string trim [exec pass otp show $password_path]]
+            send "$otp\r\r"
+        }
+
+        expect "*Profile URL*" {
+            puts "Logged in"
+            exit
+        }
+    }
+
+    "*Profile URL*" {
+        puts "Already logged in"
+        # puts "<$expect_out(buffer)>"
+        exit
+    }
+}
