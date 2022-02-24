@@ -7,22 +7,37 @@ if {[catch {set fp [open $password_path_config]} errmsg]} {
 }
 set password_path [string trim [read $fp]]
 
-spawn tsh login
+set tsh_proxy_config "~/.config/tsh-login/tsh_proxy"
+if {[catch {set fp [open $tsh_proxy_config]} errmsg]} {
+    puts "$errorInfo"
+    exit 66
+}
+set tsh_proxy [string trim [read $fp]]
+
+spawn tsh login $tsh_proxy
 expect {
     "Enter password for*" {
         puts "Please decrypt password."
         set password [string trim [exec pass show $password_path | head -n1]]
         send "$password\r"
 
-        expect "Enter an OTP code from a device:" {
+        expect {
+          "Enter an OTP code from a device:" {
             puts "Please decrypt OTP."
             set otp [string trim [exec pass otp show $password_path]]
             send "$otp\r\r"
-        }
+            exp_continue
+          }
 
-        expect "*Profile URL*" {
+          "Tap any security key or enter a code from a OTP device:" {
+              puts "Please touch your yubikey"
+              exp_continue
+          }
+
+          "*Profile URL*" {
             puts "Logged in"
             exit
+          }
         }
     }
 
